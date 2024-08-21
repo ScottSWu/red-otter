@@ -190,7 +190,7 @@ export class WebGLRenderer implements Renderer {
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly context: WebGL2RenderingContext,
-    private readonly fontLookups: Lookups,
+    public readonly fontLookups: Lookups,
     fontAtlasTexture: ImageBitmap,
   ) {
     this.gl = context;

@@ -1,14 +1,14 @@
-import { EventManager } from "../src/EventManager";
-import { WebGPURenderer } from "../src/renderer/WebGPURenderer";
-import { isWindowDefined, settings } from "../src/consts";
-import { paint } from "../src/layout/paint";
-import { parseTTF } from "../src/font/parseTTF";
-import { prepareLookups } from "../src/font/prepareLookups";
-import { renderFontAtlas } from "../src/font/renderFontAtlas";
+import { EventManager } from "../../src/EventManager";
+import { WebGLRenderer } from "../../src/renderer/WebGLRenderer";
+import { isWindowDefined, settings } from "../../src/consts";
+import { paint } from "../../src/layout/paint";
+import { parseTTF } from "../../src/font/parseTTF";
+import { prepareLookups } from "../../src/font/prepareLookups";
+import { renderFontAtlas } from "../../src/font/renderFontAtlas";
 import { ui } from "./ui";
-import { invariant } from "../src/utils/invariant";
-import { compose } from "../src/layout/compose";
-import { UserEventType } from "../src/layout/eventTypes";
+import { invariant } from "../../src/utils/invariant";
+import { compose } from "../../src/layout/compose";
+import { UserEventType } from "../../src/layout/eventTypes";
 
 const eventManager = new EventManager();
 
@@ -16,7 +16,7 @@ async function initialize() {
   const alphabet =
     "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890 ,.:•-–()[]{}!?@#$%^&*+=/\\|<>`~’'\";_▶";
   const [interTTF, interBoldTTF, comicNeueTTF, jetBrainsMonoTTF] = await Promise.all(
-    ["/Inter.ttf", "/Inter-SemiBold.ttf", "/ComicNeue-Bold.ttf", "JetBrainsMono-Regular.ttf"].map(
+    ["/Inter.ttf", "/Inter-SemiBold.ttf", "/ComicNeue-Bold.ttf", "/JetBrainsMono-Regular.ttf"].map(
       (url) => fetch(url).then((response) => response.arrayBuffer()),
     ),
   );
@@ -35,22 +35,8 @@ async function initialize() {
     `width: ${settings.windowWidth}px; height: ${settings.windowHeight}px; display: flex; position: fixed`,
   );
   document.body.append(canvas);
-  const entry = navigator.gpu;
-  invariant(entry, "WebGPU is not supported in this browser.");
-
-  const context = canvas.getContext("webgpu");
-  invariant(context, "WebGPU is not supported in this browser.");
-
-  const adapter = await entry.requestAdapter();
-  invariant(adapter, "No GPU found on this system.");
-
-  const device = await adapter.requestDevice();
-
-  context.configure({
-    alphaMode: "opaque",
-    device: device,
-    format: navigator.gpu.getPreferredCanvasFormat(),
-  });
+  const context = canvas.getContext("webgl2");
+  invariant(context, "WebGL 2.0 is not supported in this browser.");
 
   const lookups = prepareLookups(
     [
@@ -64,23 +50,7 @@ async function initialize() {
 
   const fontAtlas = await renderFontAtlas(lookups, { useSDF: true });
 
-  const colorTexture = device.createTexture({
-    format: "bgra8unorm",
-    label: "color",
-    sampleCount: settings.sampleCount,
-    size: { height: canvas.height, width: canvas.width },
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-  });
-  const colorTextureView = colorTexture.createView({ label: "color" });
-
-  const renderer = new WebGPURenderer(
-    device,
-    context,
-    colorTextureView,
-    settings,
-    lookups,
-    fontAtlas,
-  );
+  const renderer = new WebGLRenderer(canvas, context, lookups, fontAtlas);
 
   const root = ui(renderer);
 
@@ -89,16 +59,13 @@ async function initialize() {
   eventManager.deliverEvents(root);
 
   function render(): void {
-    invariant(context, "WebGPU is not supported in this browser.");
-
-    const commandEncoder = device.createCommandEncoder();
+    invariant(context, "WebGL 2.0 is not supported in this browser.");
 
     eventManager.deliverEvents(root);
     compose(renderer, root);
     paint(renderer, root);
 
-    renderer.render(commandEncoder);
-    device.queue.submit([commandEncoder.finish()]);
+    renderer.render();
 
     requestAnimationFrame(render);
   }

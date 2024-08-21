@@ -1,13 +1,13 @@
-import { Text } from "../src/layout/Text";
-import type { WebGPURenderer } from "../src/renderer/WebGPURenderer";
-import { View } from "../src/layout/View";
-import type { Lookups } from "../src/font/types";
-import { layout } from "../src/layout/layout";
-import { Vec2 } from "../src/math/Vec2";
-import type { TextStyleProps, ViewStyleProps } from "../src/layout/styling";
-import { AlignSelf, FlexDirection, JustifyContent, Overflow } from "../src/layout/styling";
-import { invariant } from "../src/utils/invariant";
-import * as fixtures from "../src/fixtures";
+import { Text } from "../../src/layout/Text";
+import type { WebGPURenderer } from "../../src/renderer/WebGPURenderer";
+import { View } from "../../src/layout/View";
+import type { Lookups } from "../../src/font/types";
+import { layout } from "../../src/layout/layout";
+import { Vec2 } from "../../src/math/Vec2";
+import type { TextStyleProps, ViewStyleProps } from "../../src/layout/styling";
+import { AlignSelf, FlexDirection, JustifyContent, Overflow } from "../../src/layout/styling";
+import { invariant } from "../../src/utils/invariant";
+import * as fixtures from "../../src/fixtures";
 import { measure } from "./measure";
 
 export let lookups: Lookups;
